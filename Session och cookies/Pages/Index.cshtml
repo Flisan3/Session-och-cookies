@@ -1,0 +1,259 @@
+﻿@page
+@model Webshop.Pages.IndexModel
+@using System.Globalization
+
+@{
+    var culture = CultureInfo.GetCultureInfo("sv-SE");
+    bool english = Model.Language == "English";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            @(english ? "Webshop" : "Webbshop")
+        </h1>
+
+        <div>
+            @if (Model.HasConsent)
+            {
+                <form method="post"
+                      asp-page-handler="SetLanguage"
+                      class="d-inline">
+                    <input type="hidden"
+                           name="language"
+                           value="Svenska" />
+                    <button class="btn btn-outline-primary">
+                        Svenska
+                    </button>
+                </form>
+
+                <form method="post"
+                      asp-page-handler="SetLanguage"
+                      class="d-inline">
+                    <input type="hidden"
+                           name="language"
+                           value="English" />
+                    <button class="btn btn-outline-primary">
+                        English
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-info">
+            @TempData["Message"]
+        </div>
+    }
+
+    @if (!Model.HasConsent)
+    {
+        <div class="alert alert-warning">
+            <p>Denna webbplats använder cookies.</p>
+
+            <form method="post"
+                  asp-page-handler="AcceptCookies"
+                  class="d-inline">
+                <button class="btn btn-success">
+                    Acceptera
+                </button>
+            </form>
+
+            <form method="post"
+                  asp-page-handler="RejectCookies"
+                  class="d-inline">
+                <button class="btn btn-secondary">
+                    Neka
+                </button>
+            </form>
+        </div>
+    }
+
+    @if (Model.HasConsent)
+    {
+        <p class="text-muted">
+            @(english
+                ? "Selected language: English"
+                : "Valt språk: Svenska")
+        </p>
+    }
+
+    <h2 class="mb-3">
+        @(english ? "Our products" : "Våra produkter")
+    </h2>
+
+    <div class="row">
+
+        @foreach (var product in Model.Products)
+        {
+            <div class="col-md-4 mb-4">
+
+                <div class="card h-100 shadow-sm">
+
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            @product.Name
+                        </h5>
+
+                        <p class="card-text">
+                            @product.Description
+                        </p>
+
+                        <h5>
+                            @product.Price.ToString("N0", culture) kr
+                        </h5>
+
+                        <form method="post"
+                              asp-page-handler="Add"
+                              asp-route-productId="@product.ProductId">
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                @(english ? "Add to cart" : "Lägg till")
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+    <hr class="my-4" />
+
+    <h2>
+        @(english ? "Shopping cart" : "Varukorg")
+    </h2>
+
+    @if (Model.Cart.Items.Count == 0)
+    {
+        <p>
+            @(english ? "Your cart is empty." : "Varukorgen är tom.")
+        </p>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-striped">
+
+                <thead>
+                    <tr>
+                        <th>
+                            @(english ? "Product" : "Produkt")
+                        </th>
+                        <th>
+                            @(english ? "Price" : "Pris per produkt")
+                        </th>
+                        <th>
+                            @(english ? "Quantity" : "Antal")
+                        </th>
+                        <th>
+                            @(english ? "Total" : "Pris för raden")
+                        </th>
+                        <th>
+                            @(english ? "Action" : "Ändra antal")
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <tr>
+
+                            <td>
+                                @item.Product.Name
+                            </td>
+
+                            <td>
+                                @item.Product.Price.ToString("N0", culture) kr
+                            </td>
+
+                            <td>
+                                @item.Quantity
+                            </td>
+
+                            <td>
+                                @item.TotalPrice.ToString("N0", culture) kr
+                            </td>
+
+                            <td>
+                                <form method="post"
+                                      asp-page-handler="Decrease"
+                                      asp-route-productId="@item.Product.ProductId">
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger btn-sm">
+                                        −
+                                    </button>
+
+                                </form>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+    <div class="card p-3 mt-3">
+
+        <h5>
+            @(english ? "Cart summary" : "Sammanställning")
+        </h5>
+
+        <p>
+            @(english ? "Total items:" : "Totalt antal artiklar:")
+            <strong>@Model.Cart.TotalItems</strong>
+        </p>
+
+        <p>
+            @(english ? "Total price:" : "Totalsumma:")
+            <strong>
+                @Model.Cart.TotalPrice.ToString("N0", culture) kr
+            </strong>
+        </p>
+
+        <form method="post"
+              asp-page-handler="Clear">
+
+            <button type="submit"
+                    class="btn btn-danger">
+                @(english ? "Empty cart" : "Töm varukorg")
+            </button>
+
+        </form>
+
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="mb-4">
+
+        <form method="post"
+              asp-page-handler="ResetSettings">
+
+            <button type="submit"
+                    class="btn btn-outline-secondary">
+                @(english ? "Reset settings" : "Återställ inställningar")
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
